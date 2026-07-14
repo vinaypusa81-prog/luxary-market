@@ -16,7 +16,7 @@ export function FeaturedDesigners() {
     <section className="py-14 container-main" aria-label="Featured designers">
       <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="mb-8">
         <h2 className="section-title">Featured Designers</h2>
-        <p className="section-subtitle">Exclusive collections from India's most celebrated fashion designers</p>
+        <p className="section-subtitle">Exclusive collections from India&apos;s most celebrated fashion designers</p>
       </motion.div>
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
         {DESIGNERS.map((d, i) => (

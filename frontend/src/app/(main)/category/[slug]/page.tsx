@@ -113,7 +113,7 @@ export default function CategoryPage() {
       {/* Category title */}
       <div className="mb-8">
         <h1 className="text-3xl font-heading font-black uppercase tracking-tight text-foreground">
-          {slug}'s Collection
+          {slug}&apos;s Collection
         </h1>
         <p className="text-sm text-muted-foreground mt-1">
           Showing {filteredProducts.length} premium fashion items

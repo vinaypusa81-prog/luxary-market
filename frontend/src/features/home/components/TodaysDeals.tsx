@@ -19,7 +19,7 @@ export function TodaysDeals() {
             <Tag size={16} className="text-accent" />
             <span className="text-xs font-bold uppercase tracking-widest text-accent">Limited Time</span>
           </div>
-          <h2 className="section-title">Today's Best Deals</h2>
+          <h2 className="section-title">Today&apos;s Best Deals</h2>
         </motion.div>
       </div>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">

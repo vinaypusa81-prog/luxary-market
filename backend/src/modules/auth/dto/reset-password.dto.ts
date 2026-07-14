@@ -6,7 +6,10 @@ export class ResetPasswordDto {
   @IsString()
   token: string;
 
-  @ApiProperty({ example: 'NewSecurePass123!', description: 'New password (min 8 chars)' })
+  @ApiProperty({
+    example: 'NewSecurePass123!',
+    description: 'New password (min 8 chars)',
+  })
   @IsString()
   @MinLength(8)
   newPassword: string;

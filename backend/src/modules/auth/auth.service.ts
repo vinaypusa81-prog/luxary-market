@@ -5,6 +5,8 @@ import {
   ConflictException,
   NotFoundException,
 } from '@nestjs/common';
+import { randomBytes } from 'crypto';
+
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcryptjs';
@@ -34,7 +36,7 @@ export class AuthService {
     private readonly prisma: PrismaService,
     private readonly usersService: UsersService,
     private readonly jwtService: JwtService,
-    private readonly configService: ConfigService
+    private readonly configService: ConfigService,
   ) {}
 
   // ── Registration ────────────────────────────────────────────
@@ -83,10 +85,15 @@ export class AuthService {
     }
 
     if (user.isBanned) {
-      throw new UnauthorizedException('Your account has been suspended. Contact support.');
+      throw new UnauthorizedException(
+        'Your account has been suspended. Contact support.',
+      );
     }
 
-    const isPasswordValid = await bcrypt.compare(dto.password, user.passwordHash);
+    const isPasswordValid = await bcrypt.compare(
+      dto.password,
+      user.passwordHash,
+    );
     if (!isPasswordValid) {
       throw new UnauthorizedException('Invalid email or password');
     }
@@ -201,7 +208,9 @@ export class AuthService {
     });
 
     // Get or create user
-    let user = await this.prisma.user.findUnique({ where: { email: dto.email } });
+    let user = await this.prisma.user.findUnique({
+      where: { email: dto.email },
+    });
     if (!user) {
       user = await this.prisma.user.create({
         data: {
@@ -226,8 +235,8 @@ export class AuthService {
   async refreshTokens(userId: string, refreshToken: string) {
     try {
       const payload = this.jwtService.verify(refreshToken, {
-        secret: this.configService.get('JWT_REFRESH_SECRET'),
-      });
+        secret: this.configService.get<string>('JWT_REFRESH_SECRET'),
+      }) as unknown as { sub: string };
 
       if (payload.sub !== userId) {
         throw new UnauthorizedException();
@@ -246,7 +255,8 @@ export class AuthService {
 
   async forgotPassword(email: string) {
     const user = await this.prisma.user.findUnique({ where: { email } });
-    if (!user) return { message: 'If that email exists, a reset link has been sent' };
+    if (!user)
+      return { message: 'If that email exists, a reset link has been sent' };
 
     const token = this.generateSecureToken();
     const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
@@ -263,17 +273,31 @@ export class AuthService {
 
   async resetPassword(dto: ResetPasswordDto) {
     const record = await this.prisma.otpToken.findFirst({
-      where: { otp: dto.token, type: 'reset', used: false, expiresAt: { gt: new Date() } },
+      where: {
+        otp: dto.token,
+        type: 'reset',
+        used: false,
+        expiresAt: { gt: new Date() },
+      },
     });
 
-    if (!record) throw new BadRequestException('Invalid or expired reset token');
+    if (!record)
+      throw new BadRequestException('Invalid or expired reset token');
 
-    const user = await this.prisma.user.findUnique({ where: { email: record.email! } });
+    const user = await this.prisma.user.findUnique({
+      where: { email: record.email! },
+    });
     if (!user) throw new NotFoundException('User not found');
 
     const passwordHash = await bcrypt.hash(dto.newPassword, SALT_ROUNDS);
-    await this.prisma.user.update({ where: { id: user.id }, data: { passwordHash } });
-    await this.prisma.otpToken.update({ where: { id: record.id }, data: { used: true } });
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: { passwordHash },
+    });
+    await this.prisma.otpToken.update({
+      where: { id: record.id },
+      data: { used: true },
+    });
 
     return { message: 'Password reset successfully' };
   }
@@ -285,7 +309,8 @@ export class AuthService {
       where: { token, type: 'email', expires: { gt: new Date() } },
     });
 
-    if (!record) throw new BadRequestException('Invalid or expired verification token');
+    if (!record)
+      throw new BadRequestException('Invalid or expired verification token');
 
     await this.prisma.user.updateMany({
       where: { email: record.identifier },
@@ -330,11 +355,13 @@ export class AuthService {
   }
 
   private generateSecureToken(): string {
-    return require('crypto').randomBytes(32).toString('hex');
+    return randomBytes(32).toString('hex');
   }
 
-  private sanitizeUser(user: any) {
-    const { passwordHash, twoFactorSecret, ...safe } = user;
+  private sanitizeUser(user: Record<string, unknown>): Record<string, unknown> {
+    const safe = { ...user };
+    delete safe.passwordHash;
+    delete safe.twoFactorSecret;
     return safe;
   }
 

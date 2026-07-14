@@ -1,4 +1,9 @@
-import { Injectable, CanActivate, ExecutionContext, ForbiddenException } from '@nestjs/common';
+import {
+  Injectable,
+  CanActivate,
+  ExecutionContext,
+  ForbiddenException,
+} from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { Role } from '@prisma/client';
 import { ROLES_KEY } from '../decorators/roles.decorator';
@@ -15,13 +20,16 @@ export class RolesGuard implements CanActivate {
 
     if (!requiredRoles || requiredRoles.length === 0) return true;
 
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const { user } = context.switchToHttp().getRequest();
     if (!user) throw new ForbiddenException('Access denied');
 
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     const hasRole = requiredRoles.some((role) => user.role === role);
     if (!hasRole) {
       throw new ForbiddenException(
-        `Access restricted to: ${requiredRoles.join(', ')}. Your role: ${user.role}`
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+        `Access restricted to: ${requiredRoles.join(', ')}. Your role: ${user.role}`,
       );
     }
 

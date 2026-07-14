@@ -60,7 +60,7 @@ export function NewsletterSection() {
               <div className="h-16 w-16 rounded-full bg-success/10 flex items-center justify-center">
                 <CheckCircle size={32} className="text-success" />
               </div>
-              <p className="text-xl font-semibold">You're in! 🎉</p>
+              <p className="text-xl font-semibold">You&apos;re in! 🎉</p>
               <p className="text-muted-foreground">
                 Check your inbox for a welcome gift.
               </p>

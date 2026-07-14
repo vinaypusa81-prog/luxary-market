@@ -126,7 +126,7 @@ export function TrendingProducts() {
               <TrendingUp size={20} className="text-accent" />
               <span className="text-xs font-bold uppercase tracking-widest text-accent">Trending Now</span>
             </div>
-            <h2 className="section-title">What Everyone's Wearing</h2>
+            <h2 className="section-title">What Everyone&apos;s Wearing</h2>
           </motion.div>
 
           <div className="flex items-center gap-3">

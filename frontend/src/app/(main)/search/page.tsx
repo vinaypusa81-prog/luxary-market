@@ -31,7 +31,7 @@ function SearchResultsContent() {
       <div className="mb-8">
         <h1 className="text-xl sm:text-2xl font-bold flex items-center gap-2">
           <Search size={22} className="text-accent" />
-          Search Results for: <span className="text-accent">"{query}"</span>
+          Search Results for: <span className="text-accent">&ldquo;{query}&rdquo;</span>
         </h1>
         <p className="text-xs text-muted-foreground mt-1">
           Found {results.length} matched items
@@ -43,7 +43,7 @@ function SearchResultsContent() {
           <HelpCircle size={40} className="mx-auto text-muted-foreground opacity-30 mb-4 animate-bounce-subtle" />
           <h2 className="font-semibold text-base mb-1">No search matches found</h2>
           <p className="text-muted-foreground text-xs mb-6">
-            Check the spelling or try searching for generic terms like "jeans", "shirt", or "dress".
+            Check the spelling or try searching for generic terms like &ldquo;jeans&rdquo;, &ldquo;shirt&rdquo;, or &ldquo;dress&rdquo;.
           </p>
         </div>
       ) : (

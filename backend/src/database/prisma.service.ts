@@ -1,4 +1,9 @@
-import { Injectable, OnModuleInit, OnModuleDestroy, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  OnModuleInit,
+  OnModuleDestroy,
+  Logger,
+} from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
 import { ConfigService } from '@nestjs/config';
 
@@ -7,7 +12,10 @@ import { ConfigService } from '@nestjs/config';
  * query logging in development, and graceful shutdown handling.
  */
 @Injectable()
-export class PrismaService extends PrismaClient implements OnModuleInit, OnModuleDestroy {
+export class PrismaService
+  extends PrismaClient
+  implements OnModuleInit, OnModuleDestroy
+{
   private readonly logger = new Logger(PrismaService.name);
 
   constructor(private readonly configService: ConfigService) {
@@ -24,7 +32,9 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
     });
 
     // Register database synchronization middleware to notify Admin Express Server
+
     this.$use(async (params, next) => {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       const result = await next(params);
 
       if (
@@ -32,7 +42,9 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
         ['User', 'Order', 'Review'].includes(params.model) &&
         ['create', 'update'].includes(params.action)
       ) {
-        const syncSecret = this.configService.get('STORE_SYNC_SECRET') || 'your-store-sync-webhook-secret-change-in-production';
+        const syncSecret =
+          this.configService.get<string>('STORE_SYNC_SECRET') ||
+          'your-store-sync-webhook-secret-change-in-production';
         const syncUrl = 'http://localhost:5001/api/sync/webhook';
 
         fetch(syncUrl, {
@@ -44,14 +56,18 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
           body: JSON.stringify({
             model: params.model,
             action: params.action,
-            data: result,
+            data: result as unknown,
           }),
-        }).catch((err: any) => {
+        }).catch((err: unknown) => {
+          const errorMsg = err instanceof Error ? err.message : String(err);
           // Silent catch to prevent catalog write blocking
-          this.logger.error(`❌ Sync webhook failed for ${params.model}: ${err.message}`);
+          this.logger.error(
+            `❌ Sync webhook failed for ${params.model}: ${errorMsg}`,
+          );
         });
       }
 
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-return
       return result;
     });
   }
@@ -84,7 +100,9 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
     `;
     await this.$executeRaw`SET session_replication_role = 'replica'`;
     for (const { tablename } of tablenames) {
-      await this.$executeRawUnsafe(`TRUNCATE TABLE "public"."${tablename}" CASCADE`);
+      await this.$executeRawUnsafe(
+        `TRUNCATE TABLE "public"."${tablename}" CASCADE`,
+      );
     }
     await this.$executeRaw`SET session_replication_role = 'origin'`;
   }

@@ -1,3 +1,4 @@
+import * as express from 'express';
 import {
   Controller,
   Post,
@@ -11,7 +12,12 @@ import {
   Res,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
 import { Throttle } from '@nestjs/throttler';
 import { AuthService } from './auth.service';
@@ -27,7 +33,7 @@ import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 export class AuthController {
   constructor(
     private readonly authService: AuthService,
-    private readonly configService: ConfigService
+    private readonly configService: ConfigService,
   ) {}
 
   // ── Registration ────────────────────────────────────────────
@@ -81,13 +87,28 @@ export class AuthController {
 
   @Get('google/callback')
   @UseGuards(AuthGuard('google'))
-  @ApiOperation({ summary: 'Google OAuth callback — exchanges code for tokens' })
-  async googleCallback(@Request() req: any, @Res() res: any) {
-    const result = await this.authService.googleLogin(req.user);
+  @ApiOperation({
+    summary: 'Google OAuth callback — exchanges code for tokens',
+  })
+  async googleCallback(
+    @Request() req: express.Request & { user: Record<string, unknown> },
+    @Res() res: express.Response,
+  ) {
+    const result = await this.authService.googleLogin(
+      req.user as unknown as {
+        email: string;
+        name: string;
+        picture: string;
+        googleId: string;
+      },
+    );
     // Redirect to frontend with tokens as query params (use httpOnly cookies in prod)
-    const frontendUrl = this.configService.get('APP_URL', 'http://localhost:3000');
+    const frontendUrl = this.configService.get<string>(
+      'APP_URL',
+      'http://localhost:3000',
+    );
     res.redirect(
-      `${frontendUrl}/auth/callback?token=${result.accessToken}&refresh=${result.refreshToken}`
+      `${frontendUrl}/auth/callback?token=${result.accessToken}&refresh=${result.refreshToken}`,
     );
   }
 
@@ -131,7 +152,7 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Get current authenticated user profile' })
-  async getMe(@Request() req: any) {
+  getMe(@Request() req: express.Request & { user: Record<string, unknown> }) {
     return req.user;
   }
 }

@@ -25,7 +25,7 @@ async function bootstrap() {
     helmet({
       contentSecurityPolicy: nodeEnv === 'production',
       crossOriginEmbedderPolicy: false,
-    })
+    }),
   );
 
   // ── GZIP Compression ─────────────────────────────────────────
@@ -45,25 +45,27 @@ async function bootstrap() {
   // ── Global Validation Pipe ────────────────────────────────────
   app.useGlobalPipes(
     new ValidationPipe({
-      whitelist: true,              // Strip unknown properties
-      forbidNonWhitelisted: true,   // Throw on unknown properties
-      transform: true,              // Auto-transform payloads to DTO types
+      whitelist: true, // Strip unknown properties
+      forbidNonWhitelisted: true, // Throw on unknown properties
+      transform: true, // Auto-transform payloads to DTO types
       transformOptions: {
         enableImplicitConversion: true,
       },
       stopAtFirstError: false,
-    })
+    }),
   );
 
   // ── Swagger API Documentation ─────────────────────────────────
   if (nodeEnv !== 'production') {
     const swaggerConfig = new DocumentBuilder()
       .setTitle('LuxeMarket API')
-      .setDescription('Enterprise Fashion eCommerce REST API — Full documentation')
+      .setDescription(
+        'Enterprise Fashion eCommerce REST API — Full documentation',
+      )
       .setVersion('1.0.0')
       .addBearerAuth(
         { type: 'http', scheme: 'bearer', bearerFormat: 'JWT', in: 'header' },
-        'JWT-auth'
+        'JWT-auth',
       )
       .addTag('Auth', 'Authentication & authorization endpoints')
       .addTag('Users', 'User management endpoints')

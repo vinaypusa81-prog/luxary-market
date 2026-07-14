@@ -98,7 +98,7 @@ export function Footer() {
               </span>
             </div>
             <p className="text-white/60 text-sm leading-relaxed mb-6 max-w-xs">
-              India's premium fashion marketplace. Discover luxury brands, latest trends,
+              India&apos;s premium fashion marketplace. Discover luxury brands, latest trends,
               and exclusive collections curated just for you.
             </p>
 

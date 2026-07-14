@@ -145,7 +145,7 @@ export function CustomerReviews() {
 
                   {/* Review text */}
                   <p className="text-foreground text-base leading-relaxed italic mb-6">
-                    "{review.review}"
+                    &ldquo;{review.review}&rdquo;
                   </p>
 
                   {/* Product tag */}

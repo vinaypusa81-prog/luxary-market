@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
-import { Prisma, ProductStatus } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 
 /**
  * ProductsRepository — Data access layer for products following
@@ -12,7 +12,9 @@ export class ProductsRepository {
 
   async findMany(params: {
     where?: Prisma.ProductWhereInput;
-    orderBy?: Prisma.ProductOrderByWithRelationInput | Prisma.ProductOrderByWithRelationInput[];
+    orderBy?:
+      | Prisma.ProductOrderByWithRelationInput
+      | Prisma.ProductOrderByWithRelationInput[];
     skip?: number;
     take?: number;
     include?: Prisma.ProductInclude;

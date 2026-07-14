@@ -161,7 +161,11 @@ export function SearchOverlay({ onClose }: SearchOverlayProps) {
                 <button
                   key={suggestion}
                   className="flex items-center gap-3 w-full px-3 py-3 rounded-xl hover:bg-muted text-sm text-foreground text-left transition-colors"
-                  onClick={() => { setQuery(suggestion); handleSearch(new Event('submit') as any); }}
+                  onClick={() => {
+                    setQuery(suggestion);
+                    onClose();
+                    window.location.href = `/search?q=${encodeURIComponent(suggestion.trim())}`;
+                  }}
                 >
                   <Search size={14} className="text-muted-foreground" />
                   <span>
@@ -176,7 +180,7 @@ export function SearchOverlay({ onClose }: SearchOverlayProps) {
                 className="flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-muted text-sm font-semibold text-accent text-left transition-colors"
               >
                 <Search size={14} />
-                Search for "{query}"
+                Search for &ldquo;{query}&rdquo;
                 <ArrowRight size={14} className="ml-auto" />
               </Link>
             </div>

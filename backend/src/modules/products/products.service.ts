@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { ProductsRepository } from './products.repository';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
@@ -18,10 +22,20 @@ export class ProductsService {
 
   async findAll(filters: ProductFiltersDto) {
     const {
-      search, category, brand, minPrice, maxPrice,
-      sizes, colors, material, discount, rating, inStock,
-      sortBy = 'createdAt', sortOrder = 'desc',
-      page = 1, limit = 24,
+      search,
+      category,
+      brand,
+      minPrice,
+      maxPrice,
+      colors,
+      material,
+      discount,
+      rating,
+      inStock,
+      sortBy = 'createdAt',
+      sortOrder = 'desc',
+      page = 1,
+      limit = 24,
     } = filters;
 
     const where: Prisma.ProductWhereInput = {
@@ -38,8 +52,12 @@ export class ProductsService {
       ...(brand && { brand: { slug: brand } }),
       ...(minPrice !== undefined && { basePrice: { gte: minPrice } }),
       ...(maxPrice !== undefined && { basePrice: { lte: maxPrice } }),
-      ...(colors?.length && { attributes: { path: ['color'], array_contains: colors } }),
-      ...(material && { material: { contains: material, mode: 'insensitive' } }),
+      ...(colors?.length && {
+        attributes: { path: ['color'], array_contains: colors },
+      }),
+      ...(material && {
+        material: { contains: material, mode: 'insensitive' },
+      }),
       ...(discount && { discountPercent: { gte: discount } }),
       ...(rating && { avgRating: { gte: rating } }),
       ...(inStock && { inventory: { availableStock: { gt: 0 } } }),
@@ -68,7 +86,7 @@ export class ProductsService {
 
   // ── Get Single Product ────────────────────────────────────────
 
-  async findBySlug(slug: string, userId?: string) {
+  async findBySlug(slug: string) {
     const product = await this.productsRepository.findBySlug(slug);
     if (!product || product.status !== ProductStatus.ACTIVE) {
       throw new NotFoundException(`Product "${slug}" not found`);
@@ -94,7 +112,9 @@ export class ProductsService {
       barcode: dto.barcode,
       basePrice: dto.basePrice,
       salePrice: dto.salePrice,
-      discountPercent: dto.salePrice ? ((dto.basePrice - dto.salePrice) / dto.basePrice) * 100 : null,
+      discountPercent: dto.salePrice
+        ? ((dto.basePrice - dto.salePrice) / dto.basePrice) * 100
+        : null,
       taxRate: dto.taxRate || 18.0,
       images: dto.images || [],
       tags: dto.tags || [],
@@ -118,7 +138,8 @@ export class ProductsService {
       ...(dto.variants?.length && {
         variants: {
           create: dto.variants.map((v) => ({
-            sku: v.sku || `${dto.sku || 'SKU'}-${v.color || ''}-${v.size || ''}`,
+            sku:
+              v.sku || `${dto.sku || 'SKU'}-${v.color || ''}-${v.size || ''}`,
             name: v.name,
             color: v.color,
             size: v.size,
@@ -151,9 +172,10 @@ export class ProductsService {
       ...(dto.basePrice && { basePrice: dto.basePrice }),
       ...(dto.salePrice !== undefined && {
         salePrice: dto.salePrice,
-        discountPercent: dto.salePrice && dto.basePrice
-          ? ((dto.basePrice - dto.salePrice) / dto.basePrice) * 100
-          : null,
+        discountPercent:
+          dto.salePrice && dto.basePrice
+            ? ((dto.basePrice - dto.salePrice) / dto.basePrice) * 100
+            : null,
       }),
       ...(dto.images && { images: dto.images }),
       ...(dto.status && { status: dto.status as ProductStatus }),
@@ -170,7 +192,9 @@ export class ProductsService {
     if (!product) throw new NotFoundException('Product not found');
 
     // Soft delete by archiving
-    return this.productsRepository.update(id, { status: ProductStatus.ARCHIVED });
+    return this.productsRepository.update(id, {
+      status: ProductStatus.ARCHIVED,
+    });
   }
 
   // ── Get Trending Products ─────────────────────────────────────
@@ -219,11 +243,13 @@ export class ProductsService {
   }
 
   private async generateUniqueSlug(name: string): Promise<string> {
-    let slug = slugify(name);
+    const slug = slugify(name);
     let suffix = 0;
     while (true) {
       const candidate = suffix === 0 ? slug : `${slug}-${suffix}`;
-      const existing = await this.productsRepository.count({ slug: candidate } as any);
+      const existing = await this.productsRepository.count({
+        slug: candidate,
+      });
       if (!existing) return candidate;
       suffix++;
     }

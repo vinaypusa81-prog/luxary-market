@@ -1,4 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../database/prisma.service';
 
 @Injectable()
@@ -9,9 +10,18 @@ export class UsersService {
     const user = await this.prisma.user.findUnique({
       where: { id },
       select: {
-        id: true, email: true, name: true, phone: true, avatar: true,
-        role: true, emailVerified: true, phoneVerified: true, createdAt: true,
-        updatedAt: true, lastLoginAt: true, isActive: true,
+        id: true,
+        email: true,
+        name: true,
+        phone: true,
+        avatar: true,
+        role: true,
+        emailVerified: true,
+        phoneVerified: true,
+        createdAt: true,
+        updatedAt: true,
+        lastLoginAt: true,
+        isActive: true,
       },
     });
     if (!user) throw new NotFoundException('User not found');
@@ -22,19 +32,35 @@ export class UsersService {
     return this.prisma.user.findUnique({ where: { email } });
   }
 
-  async updateProfile(id: string, data: { name?: string; phone?: string; avatar?: string }) {
+  async updateProfile(
+    id: string,
+    data: { name?: string; phone?: string; avatar?: string },
+  ) {
     return this.prisma.user.update({ where: { id }, data });
   }
 
   async getAddresses(userId: string) {
-    return this.prisma.address.findMany({ where: { userId }, orderBy: { isDefault: 'desc' } });
+    return this.prisma.address.findMany({
+      where: { userId },
+      orderBy: { isDefault: 'desc' },
+    });
   }
 
-  async addAddress(userId: string, data: any) {
+  async addAddress(
+    userId: string,
+    data: Record<string, unknown> & { isDefault?: boolean },
+  ) {
     if (data.isDefault) {
-      await this.prisma.address.updateMany({ where: { userId }, data: { isDefault: false } });
+      await this.prisma.address.updateMany({
+        where: { userId },
+        data: { isDefault: false },
+      });
     }
-    return this.prisma.address.create({ data: { ...data, userId } });
+    const addressData = {
+      ...data,
+      userId,
+    } as unknown as Prisma.AddressUncheckedCreateInput;
+    return this.prisma.address.create({ data: addressData });
   }
 
   async getOrders(userId: string) {

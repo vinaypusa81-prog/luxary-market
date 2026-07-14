@@ -1,4 +1,8 @@
-import { Injectable, ExecutionContext, UnauthorizedException } from '@nestjs/common';
+import {
+  Injectable,
+  ExecutionContext,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { Reflector } from '@nestjs/core';
 import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
@@ -18,8 +22,10 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
     return super.canActivate(context);
   }
 
-  handleRequest(err: any, user: any) {
-    if (err || !user) throw err || new UnauthorizedException('Authentication required');
+  handleRequest(err: any, user: any): any {
+    if (err || !user)
+      throw err || new UnauthorizedException('Authentication required');
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     return user;
   }
 }

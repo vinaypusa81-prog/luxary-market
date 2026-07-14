@@ -1,8 +1,19 @@
+import * as express from 'express';
 import {
-  Controller, Get, Post, Put, Delete, Param, Body,
-  Query, UseGuards, Request, HttpCode, HttpStatus
+  Controller,
+  Get,
+  Post,
+  Put,
+  Delete,
+  Param,
+  Body,
+  Query,
+  UseGuards,
+  Request,
+  HttpCode,
+  HttpStatus,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { ProductsService } from './products.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
@@ -21,7 +32,9 @@ export class ProductsController {
 
   @Get()
   @Public()
-  @ApiOperation({ summary: 'List products with advanced filtering and pagination' })
+  @ApiOperation({
+    summary: 'List products with advanced filtering and pagination',
+  })
   findAll(@Query() filters: ProductFiltersDto) {
     return this.productsService.findAll(filters);
   }
@@ -50,8 +63,8 @@ export class ProductsController {
   @Get(':slug')
   @Public()
   @ApiOperation({ summary: 'Get product by slug with full details' })
-  findOne(@Param('slug') slug: string, @Request() req: any) {
-    return this.productsService.findBySlug(slug, req.user?.id);
+  findOne(@Param('slug') slug: string) {
+    return this.productsService.findBySlug(slug);
   }
 
   @Post()
@@ -59,7 +72,10 @@ export class ProductsController {
   @Roles(Role.ADMIN, Role.SELLER)
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Create new product (Admin/Seller only)' })
-  create(@Body() dto: CreateProductDto, @Request() req: any) {
+  create(
+    @Body() dto: CreateProductDto,
+    @Request() req: express.Request & { user: { id: string; role: Role } },
+  ) {
     return this.productsService.create(dto, req.user.id, req.user.role);
   }
 
@@ -67,7 +83,11 @@ export class ProductsController {
   @Roles(Role.ADMIN, Role.SELLER)
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Update product (Admin/Seller only)' })
-  update(@Param('id') id: string, @Body() dto: UpdateProductDto, @Request() req: any) {
+  update(
+    @Param('id') id: string,
+    @Body() dto: UpdateProductDto,
+    @Request() req: express.Request & { user: { id: string; role: Role } },
+  ) {
     return this.productsService.update(id, dto, req.user.id, req.user.role);
   }
 

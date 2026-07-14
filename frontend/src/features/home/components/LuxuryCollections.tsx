@@ -55,7 +55,7 @@ export function LuxuryCollections() {
           </div>
           <h2 className="section-title text-3xl sm:text-4xl">Luxury Collections</h2>
           <p className="section-subtitle max-w-lg mx-auto mt-3">
-            Discover our most exclusive, handpicked collections from the world's finest designers.
+            Discover our most exclusive, handpicked collections from the world&apos;s finest designers.
           </p>
         </motion.div>
 
