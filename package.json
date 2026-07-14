@@ -1,0 +1,32 @@
+{
+  "name": "luxemarket",
+  "version": "1.0.0",
+  "private": true,
+  "description": "LuxeMarket — Enterprise Fashion eCommerce Platform",
+  "workspaces": [
+    "frontend",
+    "backend"
+  ],
+  "scripts": {
+    "dev": "concurrently \"npm run dev:frontend\" \"npm run dev:backend\"",
+    "dev:frontend": "npm run dev --workspace=frontend",
+    "dev:backend": "npm run start:dev --workspace=backend",
+    "build": "npm run build --workspace=frontend && npm run build --workspace=backend",
+    "lint": "npm run lint --workspace=frontend && npm run lint --workspace=backend",
+    "test": "npm run test --workspace=frontend && npm run test --workspace=backend",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\""
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^19.6.1",
+    "@commitlint/config-conventional": "^19.6.0",
+    "@prisma/client": "^6.2.1",
+    "concurrently": "^9.1.0",
+    "husky": "^9.1.7",
+    "prettier": "^3.4.2",
+    "prisma": "^6.2.1"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "npm": ">=10.0.0"
+  }
+}

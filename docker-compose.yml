@@ -1,0 +1,148 @@
+version: '3.9'
+
+# ============================================================
+# LuxeMarket — Docker Compose (Local Development)
+# ============================================================
+
+services:
+
+  # ── PostgreSQL Database ────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    container_name: luxemarket_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: luxemarket
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - luxemarket
+
+  # ── Redis Cache ────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: luxemarket_redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - luxemarket
+
+  # ── Elasticsearch ──────────────────────────────────────────
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.12.0
+    container_name: luxemarket_elasticsearch
+    restart: unless-stopped
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+    ports:
+      - "9200:9200"
+    volumes:
+      - es_data:/usr/share/elasticsearch/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9200/_cluster/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    networks:
+      - luxemarket
+
+  # ── RabbitMQ ──────────────────────────────────────────────
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: luxemarket_rabbitmq
+    restart: unless-stopped
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    ports:
+      - "5672:5672"
+      - "15672:15672"    # Management UI
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    networks:
+      - luxemarket
+
+  # ── NestJS Backend ─────────────────────────────────────────
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: development
+    container_name: luxemarket_backend
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql://postgres:password@postgres:5432/luxemarket
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      ELASTICSEARCH_URL: http://elasticsearch:9200
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
+    ports:
+      - "4000:4000"
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - luxemarket
+
+  # ── Next.js Frontend ───────────────────────────────────────
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: development
+    container_name: luxemarket_frontend
+    restart: unless-stopped
+    env_file: ./frontend/.env.local
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+      - /app/.next
+    depends_on:
+      - backend
+    networks:
+      - luxemarket
+
+# ── Named Volumes ──────────────────────────────────────────
+volumes:
+  postgres_data:
+  redis_data:
+  es_data:
+  rabbitmq_data:
+
+# ── Networks ───────────────────────────────────────────────
+networks:
+  luxemarket:
+    driver: bridge
