@@ -110,10 +110,10 @@ export function UserMenu({ isOpen, onClose }: UserMenuProps) {
               <p className="text-sm text-muted-foreground text-center mb-4">
                 Sign in to access your account
               </p>
-              <Link href="/auth/login" onClick={onClose} className="btn btn-primary w-full justify-center">
+              <Link href="/login" onClick={onClose} className="btn btn-primary w-full justify-center">
                 Sign In
               </Link>
-              <Link href="/auth/register" onClick={onClose} className="btn btn-outline w-full justify-center">
+              <Link href="/register" onClick={onClose} className="btn btn-outline w-full justify-center">
                 Create Account
               </Link>
               <div className="flex items-center gap-2 mt-3 px-2 py-2 rounded-xl bg-muted/50 text-xs text-muted-foreground">

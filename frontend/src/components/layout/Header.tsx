@@ -414,10 +414,10 @@ export function Header() {
                   </div>
                 ) : (
                   <div className="space-y-2">
-                    <Link href="/auth/login" className="btn btn-primary w-full justify-center">
+                    <Link href="/login" className="btn btn-primary w-full justify-center">
                       Sign In
                     </Link>
-                    <Link href="/auth/register" className="btn btn-outline w-full justify-center">
+                    <Link href="/register" className="btn btn-outline w-full justify-center">
                       Create Account
                     </Link>
                   </div>

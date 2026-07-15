@@ -124,7 +124,7 @@ export default function RegisterPage() {
 
           <p className="text-center text-xs text-muted-foreground pt-4">
             Already have an account?{' '}
-            <Link href="/auth/login" className="text-accent font-semibold hover:underline">Sign In</Link>
+            <Link href="/login" className="text-accent font-semibold hover:underline">Sign In</Link>
           </p>
         </div>
       </motion.div>
