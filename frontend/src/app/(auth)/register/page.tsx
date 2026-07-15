@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { Mail, Lock, User, ShieldCheck } from 'lucide-react';
 import { toast } from 'sonner';
+import apiClient from '@/utils/apiClient';
 
 /**
  * RegisterPage — Premium brand registration portal with form validation
@@ -24,11 +25,16 @@ export default function RegisterPage() {
       return;
     }
     setIsLoading(true);
-    // Simulate API registration
-    await new Promise((r) => setTimeout(r, 1000));
-    setIsLoading(false);
-    toast.success('Account created successfully!', { description: 'Welcome to LuxeMarket!' });
-    window.location.href = '/dashboard';
+    try {
+      await apiClient.post('/auth/register', { name, email, password });
+      toast.success('Account created successfully!', { description: 'Welcome to LuxeMarket!' });
+      window.location.href = '/login';
+    } catch (err: any) {
+      const msg = err.response?.data?.message || err.message || 'Registration failed. Server may be waking up — try again in 30 seconds.';
+      toast.error(Array.isArray(msg) ? msg.join(', ') : msg);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (

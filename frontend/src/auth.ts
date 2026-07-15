@@ -36,6 +36,7 @@ export const {
                 password: credentials.password,
               }),
               headers: { 'Content-Type': 'application/json' },
+              signal: AbortSignal.timeout(45000),
             }
           );
 

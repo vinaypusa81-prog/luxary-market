@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { Mail, ArrowLeft, Key } from 'lucide-react';
 import toast, { Toaster } from 'react-hot-toast';
-import axios from 'axios';
+import apiClient from '@/utils/apiClient';
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('');
@@ -17,12 +17,11 @@ export default function ForgotPasswordPage() {
     setIsLoading(true);
 
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1';
-      await axios.post(`${apiUrl}/auth/forgot-password`, { email });
+      await apiClient.post('/auth/forgot-password', { email });
       setIsSubmitted(true);
       toast.success('Reset email sent successfully!');
     } catch (err: any) {
-      const errorMsg = err.response?.data?.message || 'Failed to send reset email';
+      const errorMsg = err.response?.data?.message || err.message || 'Failed to send reset email. Server may be waking up — try again in 30 seconds.';
       toast.error(errorMsg);
     } finally {
       setIsLoading(false);
