@@ -65,6 +65,14 @@ async function main() {
     },
   });
 
+  const sellerRecord = await prisma.seller.findUnique({
+    where: { userId: seller.id },
+  });
+
+  if (!sellerRecord) {
+    throw new Error('Seller record was not created successfully');
+  }
+
   const customer = await prisma.user.create({
     data: {
       name: 'Vinay Kumar',
@@ -131,7 +139,7 @@ async function main() {
       isTrending: true,
       categoryId: menCat.id,
       brandId: brand1.id,
-      sellerId: seller.id,
+      sellerId: sellerRecord.id,
       inventory: {
         create: { totalStock: 100, availableStock: 100, reservedStock: 0 },
       },
@@ -161,7 +169,7 @@ async function main() {
       isFeatured: true,
       categoryId: womenCat.id,
       brandId: brand2.id,
-      sellerId: seller.id,
+      sellerId: sellerRecord.id,
       inventory: {
         create: { totalStock: 45, availableStock: 45, reservedStock: 0 },
       },

@@ -1,0 +1,215 @@
+version: '3.9'
+
+# ============================================================
+# LuxeMarket — Docker Compose (Production Environment)
+# ============================================================
+
+services:
+
+  # ── PostgreSQL Database ────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    container_name: luxemarket_postgres_prod
+    restart: always
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-luxemarket}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
+    volumes:
+      - postgres_prod_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER:-postgres} -d $${POSTGRES_DB:-luxemarket}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - luxemarket_prod
+
+  # ── MongoDB Database ───────────────────────────────────────
+  mongodb:
+    image: mongo:7.0
+    container_name: luxemarket_mongodb_prod
+    restart: always
+    environment:
+      MONGO_INITDB_DATABASE: ${MONGO_DB:-luxemarket_admin}
+    volumes:
+      - mongodb_prod_data:/data/db
+    healthcheck:
+      test: ["CMD-SHELL", "echo 'db.runCommand({ping:1})' | mongosh --quiet localhost:27017/test || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - luxemarket_prod
+
+  # ── Redis Cache ────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: luxemarket_redis_prod
+    restart: always
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-redispassword}
+    volumes:
+      - redis_prod_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-redispassword}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - luxemarket_prod
+
+  # ── Elasticsearch ──────────────────────────────────────────
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.12.0
+    container_name: luxemarket_elasticsearch_prod
+    restart: always
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+    volumes:
+      - es_prod_data:/usr/share/elasticsearch/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9200/_cluster/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    networks:
+      - luxemarket_prod
+
+  # ── RabbitMQ ──────────────────────────────────────────────
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: luxemarket_rabbitmq_prod
+    restart: always
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-guest}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASS:-guest}
+    volumes:
+      - rabbitmq_prod_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    networks:
+      - luxemarket_prod
+
+  # ── NestJS Backend ─────────────────────────────────────────
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: production
+    container_name: luxemarket_backend_prod
+    restart: always
+    env_file: .env
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-password}@postgres:5432/${POSTGRES_DB:-luxemarket}?schema=public
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-redispassword}
+      ELASTICSEARCH_URL: http://elasticsearch:9200
+      RABBITMQ_URL: amqp://${RABBITMQ_USER:-guest}:${RABBITMQ_PASS:-guest}@rabbitmq:5672
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      elasticsearch:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - luxemarket_prod
+
+  # ── Next.js Frontend ───────────────────────────────────────
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: production
+    container_name: luxemarket_frontend_prod
+    restart: always
+    env_file: .env
+    environment:
+      NODE_ENV: production
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-https://api.luxemarket.com/api}
+      NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-https://luxemarket.com}
+      NEXTAUTH_URL: ${NEXTAUTH_URL:-https://luxemarket.com}
+    depends_on:
+      - backend
+    networks:
+      - luxemarket_prod
+
+  # ── Admin Panel Express Backend ────────────────────────────
+  admin-backend:
+    build:
+      context: .
+      dockerfile: ./admin-panel/backend/Dockerfile
+    container_name: luxemarket_admin_backend_prod
+    restart: always
+    env_file: .env
+    environment:
+      NODE_ENV: production
+      PORT: 5001
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-password}@postgres:5432/${POSTGRES_DB:-luxemarket}?schema=public
+      MONGODB_URI: mongodb://mongodb:27017/${MONGO_DB:-luxemarket_admin}
+      STORE_API_URL: http://backend:4000/api
+    volumes:
+      - admin_uploads:/app/public/uploads
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mongodb:
+        condition: service_healthy
+    networks:
+      - luxemarket_prod
+
+  # ── Admin Panel Vite Frontend ──────────────────────────────
+  admin-frontend:
+    build:
+      context: .
+      dockerfile: ./admin-panel/frontend/Dockerfile
+    container_name: luxemarket_admin_frontend_prod
+    restart: always
+    depends_on:
+      - admin-backend
+    networks:
+      - luxemarket_prod
+
+  # ── Caddy Reverse Proxy & SSL ──────────────────────────────
+  caddy:
+    image: caddy:2-alpine
+    container_name: luxemarket_caddy_prod
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+      - admin_uploads:/var/www/uploads
+    depends_on:
+      - frontend
+      - admin-frontend
+    networks:
+      - luxemarket_prod
+
+# ── Named Volumes ──────────────────────────────────────────
+volumes:
+  postgres_prod_data:
+  mongodb_prod_data:
+  redis_prod_data:
+  es_prod_data:
+  rabbitmq_prod_data:
+  caddy_data:
+  caddy_config:
+  admin_uploads:
+
+# ── Networks ───────────────────────────────────────────────
+networks:
+  luxemarket_prod:
+    driver: bridge

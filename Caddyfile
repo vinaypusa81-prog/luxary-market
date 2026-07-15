@@ -1,0 +1,25 @@
+# ============================================================
+# LuxeMarket — Caddy Reverse Proxy & SSL Configuration
+# ============================================================
+
+# Main Store Frontend
+{$STORE_DOMAIN:localhost} {
+    reverse_proxy frontend:3000
+}
+
+# Main Store NestJS Backend API
+{$API_DOMAIN:api.localhost} {
+    reverse_proxy backend:4000
+}
+
+# Admin Panel React Frontend
+{$ADMIN_DOMAIN:admin.localhost} {
+    # Serve static admin files (proxied to Nginx container serving it)
+    reverse_proxy admin-frontend:80
+}
+
+# Admin Panel Express Backend API
+{$ADMIN_API_DOMAIN:admin-api.localhost} {
+    # Route uploads requests to the shared directory directly or backend
+    reverse_proxy admin-backend:5001
+}
