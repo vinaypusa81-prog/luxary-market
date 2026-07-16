@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import axios from 'axios';
+import { api } from '../context/AuthContext';
 import { Lock, Mail, User, Eye, EyeOff, Loader2, ShieldCheck, CheckCircle2 } from 'lucide-react';
 
 export const Setup: React.FC = () => {
@@ -20,7 +20,7 @@ export const Setup: React.FC = () => {
     setError(null);
 
     try {
-      await axios.post('/api/auth/register', { name, email, password, role });
+      await api.post('/auth/register', { name, email, password, role });
       setSuccess(true);
       setTimeout(() => navigate('/login'), 2500);
     } catch (err: any) {

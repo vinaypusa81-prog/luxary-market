@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-import axios from 'axios';
+import { useAuth, api } from '../context/AuthContext';
 import { Lock, Mail, Eye, EyeOff, Loader2 } from 'lucide-react';
 
 export const Login: React.FC = () => {
@@ -26,7 +25,7 @@ export const Login: React.FC = () => {
     setError(null);
 
     try {
-      const { data } = await axios.post('/api/auth/login', { email, password });
+      const { data } = await api.post('/auth/login', { email, password });
       login(data.accessToken, data.refreshToken, data.admin);
       navigate('/dashboard');
     } catch (err: any) {
@@ -42,7 +41,7 @@ export const Login: React.FC = () => {
     setError(null);
 
     try {
-      const { data } = await axios.post('/api/auth/forgot-password', { email });
+      const { data } = await api.post('/auth/forgot-password', { email });
       setResetToken(data.resetToken);
       setResetSent(true);
     } catch (err: any) {
@@ -58,7 +57,7 @@ export const Login: React.FC = () => {
     setError(null);
 
     try {
-      await axios.post('/api/auth/reset-password', { token: resetToken, newPassword });
+      await api.post('/auth/reset-password', { token: resetToken, newPassword });
       setResetDone(true);
       setTimeout(() => {
         setIsForgot(false);
