@@ -224,6 +224,7 @@ async function seed() {
 
   // 9. Seed Customers
   console.log('👤 Seeding Customers...');
+  await prisma.user.deleteMany({ where: { email: 'vinay@example.com' } }).catch(() => {});
   const customerUser = await prisma.user.create({
     data: {
       name: 'Vinay Kumar',

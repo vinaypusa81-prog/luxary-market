@@ -17,6 +17,7 @@ import { LoginDto } from './dto/login.dto';
 import { OtpDto } from './dto/otp.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { Role } from '@prisma/client';
+import { EmailService } from './email.service';
 
 const OTP_EXPIRY_MINUTES = 10;
 const SALT_ROUNDS = 12;
@@ -37,6 +38,7 @@ export class AuthService {
     private readonly usersService: UsersService,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
+    private readonly emailService: EmailService,
   ) {}
 
   // ── Registration ────────────────────────────────────────────
@@ -265,8 +267,8 @@ export class AuthService {
       data: { email, otp: token, type: 'reset', expiresAt },
     });
 
-    // TODO: Send reset email
-    // await this.emailService.sendPasswordReset(email, token);
+    // Send password reset email
+    await this.emailService.sendPasswordResetEmail(email, token);
 
     return { message: 'If that email exists, a reset link has been sent' };
   }

@@ -6,6 +6,8 @@ import {
 } from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
 import { ConfigService } from '@nestjs/config';
+import { PrismaPg } from '@prisma/adapter-pg';
+import pg from 'pg';
 
 /**
  * PrismaService — Singleton Prisma client with connection lifecycle management,
@@ -19,7 +21,12 @@ export class PrismaService
   private readonly logger = new Logger(PrismaService.name);
 
   constructor(private readonly configService: ConfigService) {
+    const connectionString = configService.get<string>('DATABASE_URL');
+    const pool = new pg.Pool({ connectionString });
+    const adapter = new PrismaPg(pool);
+
     super({
+      adapter,
       log:
         configService.get('NODE_ENV') === 'development'
           ? [
@@ -45,7 +52,9 @@ export class PrismaService
         const syncSecret =
           this.configService.get<string>('STORE_SYNC_SECRET') ||
           'your-store-sync-webhook-secret-change-in-production';
-        const syncUrl = 'http://localhost:5001/api/sync/webhook';
+        const syncUrl =
+          this.configService.get<string>('STORE_SYNC_URL') ||
+          'http://localhost:5001/api/sync/webhook';
 
         fetch(syncUrl, {
           method: 'POST',

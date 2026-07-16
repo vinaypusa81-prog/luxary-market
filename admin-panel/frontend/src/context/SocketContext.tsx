@@ -44,7 +44,11 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       fetchNotifications();
 
       // Establish Socket connection
-      const socketInstance = io(window.location.origin, {
+      const socketUrl = import.meta.env.VITE_API_URL 
+        ? import.meta.env.VITE_API_URL.replace(/\/api$/, '') 
+        : window.location.origin;
+
+      const socketInstance = io(socketUrl, {
         transports: ['websocket'],
       });
 
