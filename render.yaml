@@ -1,0 +1,40 @@
+services:
+  # ── Admin Panel Express Backend ────────────────────────────
+  - type: web
+    name: luxemarket-admin-api
+    runtime: node
+    plan: free
+    rootDir: admin-panel/backend
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: DATABASE_URL
+        value: postgresql://neondb_owner:npg_f1eXjoOC9hLd@ep-dry-smoke-ahipxktt-pooler.c-3.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require
+      - key: MONGODB_URI
+        value: mongodb+srv://vinaypusa81_db_user:M7pRV3dBiwVkRPWG@cluster0.job2whs.mongodb.net/luxemarket_admin?retryWrites=true&w=majority
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_REFRESH_SECRET
+        generateValue: true
+      - key: STORE_SYNC_SECRET
+        value: your-store-sync-webhook-secret-change-in-production
+      - key: STORE_API_URL
+        value: https://luxemarket-api.onrender.com/api
+
+  # ── Storefront NestJS Backend ──────────────────────────────
+  - type: web
+    name: luxemarket-api
+    runtime: node
+    plan: free
+    rootDir: backend
+    buildCommand: npm install && npm run build
+    startCommand: node dist/main.js
+    envVars:
+      - key: DATABASE_URL
+        value: postgresql://neondb_owner:npg_f1eXjoOC9hLd@ep-dry-smoke-ahipxktt-pooler.c-3.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require
+      - key: RESEND_API_KEY
+        value: re_mock_api_key_for_development
+      - key: STORE_SYNC_URL
+        value: https://luxemarket-admin-api.onrender.com/api/sync/webhook
+      - key: STORE_SYNC_SECRET
+        value: your-store-sync-webhook-secret-change-in-production
